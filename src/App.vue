@@ -11,76 +11,44 @@
     <p v-show="inputError" class="text-danger" style="font-size: 0.6rem">*未輸入代辦事項</p>
 
     <div class="d-flex justify-content-around my-3">
-      <button type="button" class="btn btn-outline-primary" @click="changeListType('all')">全部 {{getListNumber.all}}</button>
-      <button type="button" class="btn btn-outline-primary" @click="changeListType('complete')">完成 {{getListNumber.complete}}</button>
-      <button type="button" class="btn btn-outline-primary" @click="changeListType('notComplete')">未完成 {{getListNumber.notComplete}}</button>
+      <button v-for="(btn, index) in listTypeButton" :key="`${index}_${btn.typeName}`"
+        type="button" class="btn btn-outline-primary" @click="changeListType(btn.typeName)">
+        {{btn.text}} {{getListNumber[btn.typeName]}}
+      </button>
     </div>
 
-    <div v-for="(item, index) in todoList" :key="`item_${index}`"
-      class="my-3">
+    <listItem v-for="(item, index) in todoList" :key="`item_${index}`"
+      :index="index"
+      :text="item.text"
+      :itemStatus="item.status"
+      :editContent="editInfo.content"
+      :visible="showListType(item.status)"
+      :canEdit="editInfo.index !== index"
+      @recodeEditInfo="recodeEditInfo(index, item.id)"
+      @recodeDeleteInfo="recodeDeleteInfo(index, item.id)"
+      @changeItemStatus="changeItemStatus(item.id)"
+      @handleEditValue="handleEditValue"
+      @confirmEdit="confirmEdit"
+      @deleteListItem="deleteItem({id: item.id})" />
 
-      <div v-show="showListType(item.status)" v-if="editInfo.index !== index">
-        <input class="form-check-input me-2" type="checkbox" :id="`flexCheckDefault_${index}`"
-          :checked="item.status" @click="changeItemStatus(item.id)">
-        <label class="form-check-label" :for="`flexCheckDefault_${index}`"
-          :class="item.status ? 'text-decoration-line-through' : ''">
-          {{ item.text }}
-        </label>
-
-        <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
-         @click="recodeEditInfo(index, item.id)">編輯</button>
-        <button type="button" class="btn btn-outline-danger btn-sm ms-1" 
-          data-bs-toggle="modal" data-bs-target="#deleteModal"
-          @click="recodeDeleteInfo(index, item.id)">刪除</button>
-      </div>
-
-      
-      <div v-else class="input-group input-group-sm mb-3">
-        <span class="input-group-text" id="basic-addon1">{{index + 1}}.</span>
-        <input type="text" class="form-control" placeholder="刪除此代辦事項"
-         v-model="editInfo.content" @keyup.enter="confirmEdit(false)" @blur="confirmEdit(false)">
-
-        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" 
-          @click="confirmEdit()">編輯完成</button>
-        <button type="button" class="btn btn-outline-danger btn-sm ms-1" @click="deleteItem({id: item.id})">刪除</button>
-      </div>
-
-    </div>
-
-    <div class="modal " id="deleteModal" data-bs-backdrop="static" >
-      <div class="modal-dialog">
-        <div class="modal-content">
-
-          <div class="modal-header">
-            <h5 class="modal-title fw-bold" id="exampleModalLabel">警告</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-             @click="reset('deleteInfo')"></button>
-          </div>
-          
-          <div class="modal-body">
-            是否刪除「{{deleteInfo.content}}」此代辦事項?
-          </div>
-          
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary"
-             @click="confirmDelete" data-bs-dismiss="modal">確定</button>
-            <button type="button" class="btn btn-secondary"
-             data-bs-dismiss="modal" @click="reset('deleteInfo')">取消</button>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
+    <deletePromt 
+      :deleteContent="deleteInfo.content"
+      @confirm="confirmDelete"
+      @close="reset('deleteInfo')"/>
   </div>
 </template>
 
 <script>
 import vuex from 'vuex';
+import deletePromt from './components/deletePromt.vue';
+import listItem from './components/listItem.vue';
 
 export default {
   name: 'App',
-  components: {},
+  components: {
+    deletePromt,
+    listItem,
+  },
   data () {
     return {
       currentInput: '',
@@ -96,6 +64,20 @@ export default {
         content: '',
       },
       listType: 'all', // all、complete、notComplete
+      listTypeButton: [
+        {
+          typeName: 'all',
+          text: '全部'
+        },
+        {
+          typeName: 'complete',
+          text: '完成'
+        },
+        {
+          typeName: 'notComplete',
+          text: '未完成'
+        }
+      ]
     }
   },
   watch: {
@@ -204,6 +186,9 @@ export default {
       this.reset('editInfo');
       this.reset('deleteInfo');
     },
+    handleEditValue (value) {
+      this.editInfo.content = value;
+    }
   },
 
 }
@@ -220,7 +205,7 @@ body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  height: 200vh;
+  height: 100vh;
 }
 
 .borderColor-red {

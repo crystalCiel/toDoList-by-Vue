@@ -62,7 +62,7 @@ export default new Vuex.Store({
             }
             state.todoList.push(newObj);
         },
-        changeItemStatus (state, id) { // 找不到問題點
+        changeItemStatus (state, id) {
 
             let position = void 0;
 
@@ -72,7 +72,7 @@ export default new Vuex.Store({
                 }
             });
 
-            console.log(id, position)
+            // console.log(id, position)
 
             state.todoList[position].status = !state.todoList[position].status;
         },
@@ -87,7 +87,7 @@ export default new Vuex.Store({
                 }
             });
 
-            console.log(position);
+            // console.log(position);
 
             state.todoList.splice(position, 1);
         },
